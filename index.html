@@ -74,68 +74,13 @@ input {
 const problems = [
 {
   title:"Fibonacci Numbers",
-  desc:"Print the first n fibonacci series\nThe input is given as an integer\nthe expected output is to print the numbers in fibonacci series\n\n\nEXAMPLE:\nInput:4\nOutput:0,1,1,2",
+  desc:"Print first n fibonacci series",
   testcases:[
-    {input:"1", output:"0"},
     {input:"5", output:"0,1,1,2,3"},
+    {input:"1", output:"0"},
     {input:"0", output:"invalid"},
-    {input:"10", output:"0,1,1,2,3,5,8,13,21,34"},
-    {input:"005", output:"0,1,1,2,3"}
-  ]
-},
-{
-  title:"Count occurance of character",
-  desc:"Find how many times a character appears in a string",
-  testcases:[
-    {input:"python", output:"p-1,y-1,t-1,h-1,o-1,n-1"},
-    {input:"heLlo", output:"h-1,e-1,l-2,o-1"},
-    {input:".         .", output:"invalid input"},
-    {input:"123456789", output:"invalid input"},
-    {input:"abcd@1234", output:"a-1,b-1,c-1,d-1"}
-  ]
-},
-{
-  "title":"String Without Library",
-  "desc":"Perform string operations without using built-in library functions\n1. Find length of string\n2. Reverse the string\n\nEXAMPLE:\nInput:hello\nOutput:\nLength:5\nReverse:olleh",
-  "testcases":[
-    {"input":"hello", "output":"Length:5,Reverse:olleh"},
-    {"input":"a", "output":"Length:1,Reverse:a"},
-    {"input":"", "output":"Length:0,Reverse:"},
-    {"input":"madam", "output":"Length:5,Reverse:madam"},
-    {"input":"12345", "output":"Length:5,Reverse:54321"}
-  ]
-},
-{
-  "title":"Second Largest Number Without Sorting",
-  "desc":"Find the second largest number in an array without using sorting\n\nEXAMPLE:\nInput:1 2 3 4\nOutput:3",
-  "testcases":[
-    {"input":"1 2 5 9 3 4", "output":"5"},
-    {"input":"10 21 40 0 5 7 9 0 23 30 40 50", "output":"40"},
-    {"input":"5 5 5 5", "output":"No second largest"},
-    {"input":"7 2", "output":"2"},
-    {"input":"100 90 90 80", "output":"90"}
-  ]
-},
-{
-  "title":"String Analyzer",
-  "desc":"Analyze a string and count number of uppercase letters, lowercase letters, digits, symbols, and spaces\n\nEXAMPLE:\nInput:Hello@123\nOutput:Uppercase-1,Lowercase-4,Digits-3,Symbols-1,Spaces-0",
-  "testcases":[
-    {"input":"Hello@123", "output":"Uppercase-1,Lowercase-4,Digits-3,Symbols-1,Spaces-0"},
-    {"input":"ABC def 456!", "output":"Uppercase-3,Lowercase-3,Digits-3,Symbols-1,Spaces-2"},
-    {"input":"", "output":"Uppercase-0,Lowercase-0,Digits-0,Symbols-0,Spaces-0"},
-    {"input":"12345", "output":"Uppercase-0,Lowercase-0,Digits-5,Symbols-0,Spaces-0"},
-    {"input":"!@#$%", "output":"Uppercase-0,Lowercase-0,Digits-0,Symbols-5,Spaces-0"}
-  ]
-},
-{
-  "title":"Password Validator",
-  "desc":"Validate a password based on rules:\n- At least 1 uppercase letter\n- At least 1 lowercase letter\n- At least 1 digit\n- At least 1 special character\n\nEXAMPLE:\nInput:Abc@123\nOutput:Valid Password",
-  "testcases":[
-    {"input":"Abc@123", "output":"Valid Password"},
-    {"input":"abc123", "output":"Invalid Password"},
-    {"input":"ABC@123", "output":"Invalid Password"},
-    {"input":"", "output":"Invalid Password"},
-    {"input":"Ab@1", "output":"Valid Password"}
+    {input:"3", output:"0,1,1"},
+    {input:"2", output:"0,1"}
   ]
 }
 ];
@@ -143,14 +88,13 @@ const problems = [
 let selectedProblem;
 let currentRoll;
 
-// ================= START EXAM =================
+// ================= START =================
 function startExam() {
 
   let name = document.getElementById("name").value;
   let roll = document.getElementById("roll").value;
   let email = document.getElementById("email").value;
 
-  // ADMIN LOGIN
   if(name === "organizer" && roll === "0000"){
     let pass = prompt("Enter Admin Password:");
     if(pass === "CybSec"){
@@ -174,14 +118,7 @@ function startExam() {
     return;
   }
 
-  // assign random problem
-  if(localStorage.getItem("problem_"+roll)){
-    selectedProblem = JSON.parse(localStorage.getItem("problem_"+roll));
-  } else {
-    let index = Math.floor(Math.random()*problems.length);
-    selectedProblem = problems[index];
-    localStorage.setItem("problem_"+roll, JSON.stringify(selectedProblem));
-  }
+  selectedProblem = problems[0];
 
   let examData = JSON.parse(localStorage.getItem("examData")) || [];
 
@@ -189,8 +126,6 @@ function startExam() {
     name, roll, email,
     login: new Date().toLocaleString(),
     submit: "",
-    duration: "",
-    blocked: false,
     marks: 0
   });
 
@@ -212,11 +147,6 @@ setInterval(()=>{
   let sec = time%60;
   document.getElementById("timer").innerText = `Time Left: ${min}:${sec}`;
   time--;
-
-  if(time < 0){
-    submitCode();
-    alert("Time Up!");
-  }
 },1000);
 
 // ================= RUN CODE =================
@@ -224,41 +154,52 @@ async function runCode(input){
 
   const code = document.getElementById("code").value;
 
-  const res = await fetch("/api/run", {
-    method:"POST",
-    headers: { "Content-Type":"application/json" },
-    body: JSON.stringify({ code, input })
-  });
+  try{
+    const res = await fetch("/api/run", {
+      method:"POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({code,input})
+    });
 
-  const data = await res.json();
-  return data.output;
+    const data = await res.json();
+    return (data.output || "").trim();
+
+  }catch{
+    return "Error";
+  }
 }
 
 // ================= SUBMIT =================
 async function submitCode(){
 
-  let resultText = "";
-  let marks = 0;
+  let passed = 0;
+  let failed = 0;
+  let failedList = "";
 
   for(let i=0;i<selectedProblem.testcases.length;i++){
 
     let tc = selectedProblem.testcases[i];
-
     let output = await runCode(tc.input);
 
-    if(output.trim() === tc.output.trim()){
-      marks += 20;
-      resultText += `\nTest Case ${i+1} ✅\n`;
-    } else {
-      resultText += `\nTest Case ${i+1} ❌\n`;
+    if(output === tc.output){
+      passed++;
+    }else{
+      failed++;
+      failedList += `\n${failed}. Input: ${tc.input}\nExpected: ${tc.output}\nYour Output: ${output}\n`;
     }
-
-    resultText += `Input: ${tc.input}\n`;
-    resultText += `Expected: ${tc.output}\n`;
-    resultText += `Your Output: ${output}\n\n`;
   }
 
-  resultText += "Total Marks: " + marks;
+  let marks = passed * 20;
+
+  let resultText = `
+${passed} testcases passed
+${failed} testcases failed
+
+Failed Testcases:
+${failedList}
+
+Total Marks: ${marks}
+`;
 
   document.getElementById("output").innerText = resultText;
 
@@ -267,7 +208,6 @@ async function submitCode(){
   examData.forEach(user=>{
     if(user.roll === currentRoll){
       user.submit = new Date().toLocaleString();
-      user.duration = "Completed";
       user.marks = marks;
     }
   });
@@ -277,22 +217,7 @@ async function submitCode(){
   alert("Submitted!");
 }
 
-// ================= ANTI-CHEAT =================
-function disqualify(){
-  localStorage.setItem("blocked_"+currentRoll, true);
-  alert("Violation! Exam ended.");
-  document.body.innerHTML = "<h1 style='text-align:center;margin-top:20%'>Exam Terminated</h1>";
-}
-
-document.addEventListener("visibilitychange", ()=>{
-  if(document.hidden) disqualify();
-});
-
-document.addEventListener("fullscreenchange", ()=>{
-  if(!document.fullscreenElement) disqualify();
-});
-
-// ================= ADMIN DOWNLOAD =================
+// ================= ADMIN =================
 function downloadAdmin(){
   let pass = prompt("Enter Admin Password:");
   if(pass === "CybSec"){
@@ -304,10 +229,10 @@ function downloadResults(){
 
   let data = JSON.parse(localStorage.getItem("examData")) || [];
 
-  let csv = "Name,Roll,Email,Login,Submit,Marks,Blocked\n";
+  let csv = "Name,Roll,Email,Login,Submit,Marks\n";
 
   data.forEach(u=>{
-    csv += `${u.name},${u.roll},${u.email},${u.login},${u.submit},${u.marks},${u.blocked}\n`;
+    csv += `${u.name},${u.roll},${u.email},${u.login},${u.submit},${u.marks}\n`;
   });
 
   let blob = new Blob([csv]);
