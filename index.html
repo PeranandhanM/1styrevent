@@ -1,48 +1,71 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Coding Platform</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coding Exam Platform</title>
 
 <style>
-body { background:#0f172a; color:white; font-family:Arial; }
-.container { display:flex; }
-.left { width:40%; padding:10px; }
-.right { width:60%; padding:10px; }
-textarea { width:100%; height:300px; background:black; color:#00ffcc; }
-button { padding:10px; margin:5px; }
-</style>
+body { font-family: Arial; margin: 0; background: #0f172a; color: white; }
+header { background: #020617; padding: 10px; text-align: center; }
+.container { display: flex; height: 90vh; }
+.left { width: 40%; background: #111827; padding: 10px; }
+.right { width: 60%; background: #020617; padding: 10px; }
+textarea { width: 100%; height: 60%; background: black; color: #00ffcc; }
+button { padding: 10px; margin: 5px; }
+#timer { color: red; font-size: 18px; }
 
+#loginPage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+input {
+  padding: 10px;
+  margin: 5px;
+  width: 250px;
+}
+</style>
 </head>
 
 <body>
 
 <!-- LOGIN -->
-<div id="login">
-<h2>Login</h2>
-<input id="name" placeholder="Name"><br>
-<input id="roll" placeholder="Roll"><br>
-<input id="email" placeholder="Email"><br>
-<button onclick="start()">Start Exam</button>
+<div id="loginPage">
+  <h2>Login</h2>
+  <input type="text" id="name" placeholder="Name">
+  <input type="text" id="roll" placeholder="Roll Number">
+  <input type="email" id="email" placeholder="Email">
+  <button onclick="startExam()">Start Exam</button>
 </div>
 
 <!-- EXAM -->
-<div id="exam" style="display:none;">
-<h2 id="problem"></h2>
+<div id="examPage" style="display:none;">
+<header>
+<h2>Online Coding Test</h2>
+<div id="timer">Time Left: 20:00</div>
+</header>
 
-<select id="language">
-<option value="python">Python</option>
-<option value="c">C</option>
-<option value="cpp">C++</option>
-</select>
+<div class="container">
+<div class="left">
+<h3>Problem</h3>
+<div id="problem"></div>
+</div>
 
-<textarea id="code"># Write your code here</textarea><br>
-
+<div class="right">
+<textarea id="code"># Write your Python code here</textarea><br>
 <button onclick="submitCode()">Submit</button>
 
+<h4>Output</h4>
 <pre id="output"></pre>
 
-<button ondblclick="admin()">Admin Panel</button>
+<br><br>
+<button ondblclick="downloadAdmin()">Admin Panel</button>
+</div>
+</div>
 </div>
 
 <script>
@@ -50,38 +73,88 @@ button { padding:10px; margin:5px; }
 // ================= PROBLEMS =================
 const problems = [
 {
-  title:"Factorial",
-  desc:"Find factorial of a number",
+  title:"Fibonacci Numbers",
+  desc:"Print the first n fibonacci series\nThe input is given as an integer\nthe expected output is to print the numbers in fibonacci series\n\n\nEXAMPLE:\nInput:4\nOutput:0,1,1,2",
   testcases:[
-    {input:"5", output:"120"},
-    {input:"4", output:"24"},
-    {input:"3", output:"6"},
-    {input:"2", output:"2"},
-    {input:"1", output:"1"}
+    {input:"1", output:"0"},
+    {input:"5", output:"0,1,1,2,3"},
+    {input:"0", output:"invalid"},
+    {input:"10", output:"0,1,1,2,3,5,8,13,21,34"},
+    {input:"005", output:"0,1,1,2,3"}
+  ]
+},
+{
+  title:"Count occurance of character",
+  desc:"Find how many times a character appears in a string",
+  testcases:[
+    {input:"python", output:"p-1,y-1,t-1,h-1,o-1,n-1"},
+    {input:"heLlo", output:"h-1,e-1,l-2,o-1"},
+    {input:".         .", output:"invalid input"},
+    {input:"123456789", output:"invalid input"},
+    {input:"abcd@1234", output:"a-1,b-1,c-1,d-1"}
+  ]
+},
+{
+  "title":"String Without Library",
+  "desc":"Perform string operations without using built-in library functions\n1. Find length of string\n2. Reverse the string\n\nEXAMPLE:\nInput:hello\nOutput:\nLength:5\nReverse:olleh",
+  "testcases":[
+    {"input":"hello", "output":"Length:5,Reverse:olleh"},
+    {"input":"a", "output":"Length:1,Reverse:a"},
+    {"input":"", "output":"Length:0,Reverse:"},
+    {"input":"madam", "output":"Length:5,Reverse:madam"},
+    {"input":"12345", "output":"Length:5,Reverse:54321"}
+  ]
+},
+{
+  "title":"Second Largest Number Without Sorting",
+  "desc":"Find the second largest number in an array without using sorting\n\nEXAMPLE:\nInput:1 2 3 4\nOutput:3",
+  "testcases":[
+    {"input":"1 2 5 9 3 4", "output":"5"},
+    {"input":"10 21 40 0 5 7 9 0 23 30 40 50", "output":"40"},
+    {"input":"5 5 5 5", "output":"No second largest"},
+    {"input":"7 2", "output":"2"},
+    {"input":"100 90 90 80", "output":"90"}
+  ]
+},
+{
+  "title":"String Analyzer",
+  "desc":"Analyze a string and count number of uppercase letters, lowercase letters, digits, symbols, and spaces\n\nEXAMPLE:\nInput:Hello@123\nOutput:Uppercase-1,Lowercase-4,Digits-3,Symbols-1,Spaces-0",
+  "testcases":[
+    {"input":"Hello@123", "output":"Uppercase-1,Lowercase-4,Digits-3,Symbols-1,Spaces-0"},
+    {"input":"ABC def 456!", "output":"Uppercase-3,Lowercase-3,Digits-3,Symbols-1,Spaces-2"},
+    {"input":"", "output":"Uppercase-0,Lowercase-0,Digits-0,Symbols-0,Spaces-0"},
+    {"input":"12345", "output":"Uppercase-0,Lowercase-0,Digits-5,Symbols-0,Spaces-0"},
+    {"input":"!@#$%", "output":"Uppercase-0,Lowercase-0,Digits-0,Symbols-5,Spaces-0"}
+  ]
+},
+{
+  "title":"Password Validator",
+  "desc":"Validate a password based on rules:\n- At least 1 uppercase letter\n- At least 1 lowercase letter\n- At least 1 digit\n- At least 1 special character\n\nEXAMPLE:\nInput:Abc@123\nOutput:Valid Password",
+  "testcases":[
+    {"input":"Abc@123", "output":"Valid Password"},
+    {"input":"abc123", "output":"Invalid Password"},
+    {"input":"ABC@123", "output":"Invalid Password"},
+    {"input":"", "output":"Invalid Password"},
+    {"input":"Ab@1", "output":"Valid Password"}
   ]
 }
 ];
 
-let selected;
+let selectedProblem;
 let currentRoll;
 
 // ================= START EXAM =================
-function start(){
+function startExam() {
 
   let name = document.getElementById("name").value;
   let roll = document.getElementById("roll").value;
   let email = document.getElementById("email").value;
 
-  if(!name || !roll || !email){
-    alert("Fill all details");
-    return;
-  }
-
   // ADMIN LOGIN
-  if(name==="organizer" && roll==="0000"){
-    let p = prompt("Enter Password");
-    if(p==="CybSec"){
-      alert("Admin Access");
+  if(name === "organizer" && roll === "0000"){
+    let pass = prompt("Enter Admin Password:");
+    if(pass === "CybSec"){
+      downloadResults();
       return;
     } else {
       alert("Wrong Password");
@@ -89,89 +162,159 @@ function start(){
     }
   }
 
+  if(!name || !roll || !email){
+    alert("Fill all details");
+    return;
+  }
+
   currentRoll = roll;
-  selected = problems[0];
 
-  document.getElementById("login").style.display="none";
-  document.getElementById("exam").style.display="block";
+  if(localStorage.getItem("blocked_"+roll)){
+    alert("You are disqualified!");
+    return;
+  }
 
-  document.getElementById("problem").innerText =
-    selected.title + "\n" + selected.desc;
+  // assign random problem
+  if(localStorage.getItem("problem_"+roll)){
+    selectedProblem = JSON.parse(localStorage.getItem("problem_"+roll));
+  } else {
+    let index = Math.floor(Math.random()*problems.length);
+    selectedProblem = problems[index];
+    localStorage.setItem("problem_"+roll, JSON.stringify(selectedProblem));
+  }
+
+  let examData = JSON.parse(localStorage.getItem("examData")) || [];
+
+  examData.push({
+    name, roll, email,
+    login: new Date().toLocaleString(),
+    submit: "",
+    duration: "",
+    blocked: false,
+    marks: 0
+  });
+
+  localStorage.setItem("examData", JSON.stringify(examData));
+
+  document.getElementById("loginPage").style.display="none";
+  document.getElementById("examPage").style.display="block";
+
+  document.getElementById("problem").innerHTML =
+    `<h4>${selectedProblem.title}</h4><pre>${selectedProblem.desc}</pre>`;
+
+  document.documentElement.requestFullscreen();
 }
+
+// ================= TIMER =================
+let time = 1200;
+setInterval(()=>{
+  let min = Math.floor(time/60);
+  let sec = time%60;
+  document.getElementById("timer").innerText = `Time Left: ${min}:${sec}`;
+  time--;
+
+  if(time < 0){
+    submitCode();
+    alert("Time Up!");
+  }
+},1000);
 
 // ================= RUN CODE =================
 async function runCode(input){
 
-  let code = document.getElementById("code").value;
-  let language = document.getElementById("language").value;
+  const code = document.getElementById("code").value;
 
-  try{
-    let res = await fetch("/api/run",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({code,input,language})
-    });
+  const res = await fetch("/api/run", {
+    method:"POST",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify({ code, input })
+  });
 
-    let data = await res.json();
-
-    if(data.error){
-      return "ERROR: " + data.error;
-    }
-
-    return (data.output||"").trim();
-
-  }catch{
-    return "Execution Error";
-  }
+  const data = await res.json();
+  return data.output;
 }
 
 // ================= SUBMIT =================
 async function submitCode(){
 
-  let passed = 0;
-  let failed = 0;
-  let failedList = "";
+  let resultText = "";
+  let marks = 0;
 
-  for(let i=0;i<selected.testcases.length;i++){
+  for(let i=0;i<selectedProblem.testcases.length;i++){
 
-    let tc = selected.testcases[i];
-    let out = await runCode(tc.input);
+    let tc = selectedProblem.testcases[i];
 
-    if(out.startsWith("ERROR")){
-      failed++;
-      failedList += `\n${failed}. ERROR:\n${out}\n`;
+    let output = await runCode(tc.input);
+
+    if(output.trim() === tc.output.trim()){
+      marks += 20;
+      resultText += `\nTest Case ${i+1} ✅\n`;
+    } else {
+      resultText += `\nTest Case ${i+1} ❌\n`;
     }
-    else if(out === tc.output){
-      passed++;
-    }
-    else{
-      failed++;
-      failedList += `\n${failed}. Input: ${tc.input}
-Expected: ${tc.output}
-Your Output: ${out}\n`;
-    }
+
+    resultText += `Input: ${tc.input}\n`;
+    resultText += `Expected: ${tc.output}\n`;
+    resultText += `Your Output: ${output}\n\n`;
   }
 
-  let marks = passed * 20;
+  resultText += "Total Marks: " + marks;
 
-  document.getElementById("output").innerText =
-`${passed} testcases passed
-${failed} testcases failed
+  document.getElementById("output").innerText = resultText;
 
-Failed Testcases:
-${failedList}
+  let examData = JSON.parse(localStorage.getItem("examData"));
 
-Total Marks: ${marks}`;
+  examData.forEach(user=>{
+    if(user.roll === currentRoll){
+      user.submit = new Date().toLocaleString();
+      user.duration = "Completed";
+      user.marks = marks;
+    }
+  });
+
+  localStorage.setItem("examData", JSON.stringify(examData));
 
   alert("Submitted!");
 }
 
-// ================= ADMIN =================
-function admin(){
-  let p = prompt("Enter Admin Password");
-  if(p==="CybSec"){
-    alert("Admin Panel (Add download logic)");
+// ================= ANTI-CHEAT =================
+function disqualify(){
+  localStorage.setItem("blocked_"+currentRoll, true);
+  alert("Violation! Exam ended.");
+  document.body.innerHTML = "<h1 style='text-align:center;margin-top:20%'>Exam Terminated</h1>";
+}
+
+document.addEventListener("visibilitychange", ()=>{
+  if(document.hidden) disqualify();
+});
+
+document.addEventListener("fullscreenchange", ()=>{
+  if(!document.fullscreenElement) disqualify();
+});
+
+// ================= ADMIN DOWNLOAD =================
+function downloadAdmin(){
+  let pass = prompt("Enter Admin Password:");
+  if(pass === "CybSec"){
+    downloadResults();
   }
+}
+
+function downloadResults(){
+
+  let data = JSON.parse(localStorage.getItem("examData")) || [];
+
+  let csv = "Name,Roll,Email,Login,Submit,Marks,Blocked\n";
+
+  data.forEach(u=>{
+    csv += `${u.name},${u.roll},${u.email},${u.login},${u.submit},${u.marks},${u.blocked}\n`;
+  });
+
+  let blob = new Blob([csv]);
+  let a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "results.csv";
+  a.click();
 }
 
 </script>
