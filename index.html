@@ -271,35 +271,29 @@ async function submitCode(){
 
     let output = await runCode(tc.input);
 
-    if(output.trim() === tc.output.trim()){
-      marks += 20;
-      resultText += `\nTest Case ${i+1} ✅\n`;
-    } else {
-      resultText += `\nTest Case ${i+1} ❌\n`;
-    }
-
+    resultText += `\nTest Case ${i+1}\n`;
     resultText += `Input: ${tc.input}\n`;
     resultText += `Expected: ${tc.output}\n`;
-    resultText += `Your Output: ${output}\n\n`;
+    resultText += `Your Output: ${output}\n`;
+
+    if(output.trim() === tc.output.trim()){
+      marks += 20;
+      resultText += `Result: PASS ✅\n\n`;
+    } else {
+      resultText += `Result: FAIL ❌\n\n`;
+    }
+
+    // Show progress immediately
+    document.getElementById("output").innerText = resultText;
+
   }
 
-  resultText += "Total Marks: " + marks;
+  resultText += "\nTotal Marks: " + marks;
 
   document.getElementById("output").innerText = resultText;
 
-  let examData = JSON.parse(localStorage.getItem("examData"));
-
-  examData.forEach(user=>{
-    if(user.roll === currentRoll){
-      user.submit = new Date().toLocaleString();
-      user.duration = "Completed";
-      user.marks = marks;
-    }
-  });
-
-  localStorage.setItem("examData", JSON.stringify(examData));
-
   alert("Submitted!");
+
 }
 
 // ================= ANTI-CHEAT =================
