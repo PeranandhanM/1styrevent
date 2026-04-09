@@ -6,13 +6,12 @@ export default async function handler(req, res) {
 
   const { code, input, language } = req.body;
 
-  // Judge0 language IDs
   let language_id;
 
   if(language === "python") language_id = 71;
   else if(language === "c") language_id = 50;
   else if(language === "cpp") language_id = 54;
-  else language_id = 71; // default python
+  else language_id = 71;
 
   try {
     const response = await fetch("https://judge0-ce.p.sulu.sh/submissions?base64_encoded=false&wait=true", {
