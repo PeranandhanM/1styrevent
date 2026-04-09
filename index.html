@@ -46,7 +46,7 @@ input {
 <div id="examPage" style="display:none;">
 <header>
 <h2>Online Coding Test</h2>
-<div id="timer">Time Left: 30:00</div>
+<div id="timer">Time Left: 20:00</div>
 </header>
 
 <div class="container">
@@ -56,14 +56,14 @@ input {
 </div>
 
 <div class="right">
-<textarea id="code"># Write your code here</textarea><br>
+<textarea id="code"># Write your Python code here</textarea><br>
 <button onclick="submitCode()">Submit</button>
 
 <h4>Output</h4>
 <pre id="output"></pre>
 
 <br><br>
-<button ondblclick="askPassword()">Admin Panel</button>
+<button ondblclick="downloadAdmin()">Admin Panel</button>
 </div>
 </div>
 </div>
@@ -72,16 +72,28 @@ input {
 
 // ================= PROBLEMS =================
 const problems = [
-  {title:"Sum",desc:"Input: 2 numbers\nOutput: Sum"},
-  {title:"Even Odd",desc:"Check even or odd"},
-  {title:"Factorial",desc:"Find factorial"},
-  {title:"Prime",desc:"Check prime"},
-  {title:"Fibonacci",desc:"Print series"},
-  {title:"Reverse",desc:"Reverse number"},
-  {title:"Palindrome",desc:"Check palindrome"},
-  {title:"Max",desc:"Find max of 3"},
-  {title:"Array Sum",desc:"Sum array"},
-  {title:"String Length",desc:"Find length"}
+{
+  title:"Sum",
+  desc:"Add two numbers",
+  testcases:[
+    {input:"2 3", output:"5"},
+    {input:"4 5", output:"9"},
+    {input:"6 7", output:"13"},
+    {input:"1 1", output:"2"},
+    {input:"10 20", output:"30"}
+  ]
+},
+{
+  title:"Even Odd",
+  desc:"Check even or odd",
+  testcases:[
+    {input:"2", output:"Even"},
+    {input:"5", output:"Odd"},
+    {input:"10", output:"Even"},
+    {input:"7", output:"Odd"},
+    {input:"0", output:"Even"}
+  ]
+}
 ];
 
 let selectedProblem;
@@ -94,6 +106,18 @@ function startExam() {
   let roll = document.getElementById("roll").value;
   let email = document.getElementById("email").value;
 
+  // ADMIN LOGIN
+  if(name === "organizer" && roll === "0000"){
+    let pass = prompt("Enter Admin Password:");
+    if(pass === "CybSec"){
+      downloadResults();
+      return;
+    } else {
+      alert("Wrong Password");
+      return;
+    }
+  }
+
   if(!name || !roll || !email){
     alert("Fill all details");
     return;
@@ -101,13 +125,12 @@ function startExam() {
 
   currentRoll = roll;
 
-  // check blocked
   if(localStorage.getItem("blocked_"+roll)){
     alert("You are disqualified!");
     return;
   }
 
-  // assign problem
+  // assign random problem
   if(localStorage.getItem("problem_"+roll)){
     selectedProblem = JSON.parse(localStorage.getItem("problem_"+roll));
   } else {
@@ -116,7 +139,6 @@ function startExam() {
     localStorage.setItem("problem_"+roll, JSON.stringify(selectedProblem));
   }
 
-  // store user
   let examData = JSON.parse(localStorage.getItem("examData")) || [];
 
   examData.push({
@@ -124,12 +146,12 @@ function startExam() {
     login: new Date().toLocaleString(),
     submit: "",
     duration: "",
-    blocked: false
+    blocked: false,
+    marks: 0
   });
 
   localStorage.setItem("examData", JSON.stringify(examData));
 
-  // show exam
   document.getElementById("loginPage").style.display="none";
   document.getElementById("examPage").style.display="block";
 
@@ -140,7 +162,7 @@ function startExam() {
 }
 
 // ================= TIMER =================
-let time = 1800;
+let time = 1200;
 setInterval(()=>{
   let min = Math.floor(time/60);
   let sec = time%60;
@@ -153,14 +175,56 @@ setInterval(()=>{
   }
 },1000);
 
+// ================= RUN CODE =================
+async function runCode(input){
+
+  const code = document.getElementById("code").value;
+
+  const res = await fetch("/api/run", {
+    method:"POST",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify({ code, input })
+  });
+
+  const data = await res.json();
+  return data.output;
+}
+
 // ================= SUBMIT =================
-function submitCode(){
+async function submitCode(){
+
+  let resultText = "";
+  let marks = 0;
+
+  for(let i=0;i<selectedProblem.testcases.length;i++){
+
+    let tc = selectedProblem.testcases[i];
+
+    let output = await runCode(tc.input);
+
+    if(output.trim() === tc.output.trim()){
+      marks += 20;
+      resultText += `\nTest Case ${i+1} ✅\n`;
+    } else {
+      resultText += `\nTest Case ${i+1} ❌\n`;
+    }
+
+    resultText += `Input: ${tc.input}\n`;
+    resultText += `Expected: ${tc.output}\n`;
+    resultText += `Your Output: ${output}\n\n`;
+  }
+
+  resultText += "Total Marks: " + marks;
+
+  document.getElementById("output").innerText = resultText;
+
   let examData = JSON.parse(localStorage.getItem("examData"));
 
   examData.forEach(user=>{
     if(user.roll === currentRoll){
       user.submit = new Date().toLocaleString();
       user.duration = "Completed";
+      user.marks = marks;
     }
   });
 
@@ -169,68 +233,42 @@ function submitCode(){
   alert("Submitted!");
 }
 
-// ================= DISQUALIFY =================
+// ================= ANTI-CHEAT =================
 function disqualify(){
   localStorage.setItem("blocked_"+currentRoll, true);
-
-  let examData = JSON.parse(localStorage.getItem("examData"));
-
-  examData.forEach(user=>{
-    if(user.roll === currentRoll){
-      user.blocked = true;
-    }
-  });
-
-  localStorage.setItem("examData", JSON.stringify(examData));
-
   alert("Violation! Exam ended.");
   document.body.innerHTML = "<h1 style='text-align:center;margin-top:20%'>Exam Terminated</h1>";
 }
 
-// tab switch
 document.addEventListener("visibilitychange", ()=>{
-  if(document.hidden){
-    disqualify();
-  }
+  if(document.hidden) disqualify();
 });
 
-// fullscreen exit
 document.addEventListener("fullscreenchange", ()=>{
-  if(!document.fullscreenElement){
-    disqualify();
-  }
+  if(!document.fullscreenElement) disqualify();
 });
 
-// disable copy paste
-document.addEventListener('copy', e=>e.preventDefault());
-document.addEventListener('paste', e=>e.preventDefault());
-
-// ================= ADMIN =================
-function askPassword(){
+// ================= ADMIN DOWNLOAD =================
+function downloadAdmin(){
   let pass = prompt("Enter Admin Password:");
   if(pass === "CybSec"){
     downloadResults();
-  } else {
-    alert("Wrong Password");
   }
 }
 
-// ================= DOWNLOAD =================
 function downloadResults(){
 
   let data = JSON.parse(localStorage.getItem("examData")) || [];
 
-  let csv = "Name,Roll,Email,Login,Submit,Duration,Blocked\n";
+  let csv = "Name,Roll,Email,Login,Submit,Marks,Blocked\n";
 
   data.forEach(u=>{
-    csv += `${u.name},${u.roll},${u.email},${u.login},${u.submit},${u.duration},${u.blocked}\n`;
+    csv += `${u.name},${u.roll},${u.email},${u.login},${u.submit},${u.marks},${u.blocked}\n`;
   });
 
-  let blob = new Blob([csv], {type:"text/csv"});
-  let url = URL.createObjectURL(blob);
-
+  let blob = new Blob([csv]);
   let a = document.createElement("a");
-  a.href = url;
+  a.href = URL.createObjectURL(blob);
   a.download = "results.csv";
   a.click();
 }
