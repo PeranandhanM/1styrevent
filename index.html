@@ -231,20 +231,34 @@ async function runCode(input){
   const code = document.getElementById("code").value;
   const language = document.getElementById("language").value;
 
-  const res = await fetch("/api/run", {
-    method:"POST",
-    headers: { "Content-Type":"application/json" },
-    body: JSON.stringify({
-      code,
-      input,
-      language
-    })
-  });
+  try {
 
-  const data = await res.json();
-  return data.output;
+    const res = await fetch("/api/run", {
+      method:"POST",
+      headers: {
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        code,
+        input,
+        language
+      })
+    });
+
+    if(!res.ok){
+      return "Server Error: " + res.status;
+    }
+
+    const data = await res.json();
+
+    return data.output || data.error || "No Output";
+
+  } catch(err){
+
+    return "Fetch Error";
+
+  }
 }
-
 // ================= SUBMIT =================
 async function submitCode(){
 
