@@ -229,11 +229,16 @@ setInterval(()=>{
 async function runCode(input){
 
   const code = document.getElementById("code").value;
+  const language = document.getElementById("language").value;
 
   const res = await fetch("/api/run", {
     method:"POST",
     headers: { "Content-Type":"application/json" },
-    body: JSON.stringify({ code, input })
+    body: JSON.stringify({
+      code,
+      input,
+      language
+    })
   });
 
   const data = await res.json();
