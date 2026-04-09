@@ -308,19 +308,25 @@ async function submitCode(){
 }
 
 // ================= ANTI-CHEAT =================
-//function disqualify(){
-//  localStorage.setItem("blocked_"+currentRoll, true);
-//  alert("Violation! Exam ended.");
-  //document.body.innerHTML = "<h1 style='text-align:center;margin-top:20%'>Exam Terminated</h1>";
-//}
+document.addEventListener("visibilitychange", ()=>{
 
-//document.addEventListener("visibilitychange", ()=>{
-//  if(document.hidden) disqualify();
-//});
+  if(!currentRoll) return;   // prevent early trigger
 
-//document.addEventListener("fullscreenchange", ()=>{
-  //if(!document.fullscreenElement) disqualify();
-//});
+  if(document.hidden){
+    disqualify();
+  }
+
+});
+
+document.addEventListener("fullscreenchange", ()=>{
+
+  if(!currentRoll) return;   // prevent early trigger
+
+  if(!document.fullscreenElement){
+    disqualify();
+  }
+
+});
 
 // ================= ADMIN DOWNLOAD =================
 function downloadAdmin(){
