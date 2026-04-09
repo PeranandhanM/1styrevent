@@ -17,14 +17,16 @@ button { padding:10px; margin:5px; }
 
 <body>
 
+<!-- LOGIN -->
 <div id="login">
 <h2>Login</h2>
 <input id="name" placeholder="Name"><br>
 <input id="roll" placeholder="Roll"><br>
 <input id="email" placeholder="Email"><br>
-<button onclick="start()">Start</button>
+<button onclick="start()">Start Exam</button>
 </div>
 
+<!-- EXAM -->
 <div id="exam" style="display:none;">
 <h2 id="problem"></h2>
 
@@ -34,21 +36,22 @@ button { padding:10px; margin:5px; }
 <option value="cpp">C++</option>
 </select>
 
-<textarea id="code"></textarea><br>
+<textarea id="code"># Write your code here</textarea><br>
 
 <button onclick="submitCode()">Submit</button>
 
 <pre id="output"></pre>
 
-<button ondblclick="admin()">Admin</button>
+<button ondblclick="admin()">Admin Panel</button>
 </div>
 
 <script>
 
+// ================= PROBLEMS =================
 const problems = [
 {
   title:"Factorial",
-  desc:"Find factorial",
+  desc:"Find factorial of a number",
   testcases:[
     {input:"5", output:"120"},
     {input:"4", output:"24"},
@@ -62,15 +65,28 @@ const problems = [
 let selected;
 let currentRoll;
 
+// ================= START EXAM =================
 function start(){
 
-  let name = nameInput.value;
-  let roll = rollInput.value;
-  let email = emailInput.value;
+  let name = document.getElementById("name").value;
+  let roll = document.getElementById("roll").value;
+  let email = document.getElementById("email").value;
 
+  if(!name || !roll || !email){
+    alert("Fill all details");
+    return;
+  }
+
+  // ADMIN LOGIN
   if(name==="organizer" && roll==="0000"){
-    let p = prompt("Password");
-    if(p==="CybSec"){ download(); return; }
+    let p = prompt("Enter Password");
+    if(p==="CybSec"){
+      alert("Admin Access");
+      return;
+    } else {
+      alert("Wrong Password");
+      return;
+    }
   }
 
   currentRoll = roll;
@@ -83,27 +99,38 @@ function start(){
     selected.title + "\n" + selected.desc;
 }
 
+// ================= RUN CODE =================
 async function runCode(input){
 
   let code = document.getElementById("code").value;
   let language = document.getElementById("language").value;
 
-  let res = await fetch("/api/run",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({code,input,language})
-  });
+  try{
+    let res = await fetch("/api/run",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({code,input,language})
+    });
 
-  let data = await res.json();
+    let data = await res.json();
 
-  if(data.error) return "ERROR: " + data.error;
+    if(data.error){
+      return "ERROR: " + data.error;
+    }
 
-  return (data.output||"").trim();
+    return (data.output||"").trim();
+
+  }catch{
+    return "Execution Error";
+  }
 }
 
+// ================= SUBMIT =================
 async function submitCode(){
 
-  let pass=0, fail=0, failList="";
+  let passed = 0;
+  let failed = 0;
+  let failedList = "";
 
   for(let i=0;i<selected.testcases.length;i++){
 
@@ -111,37 +138,40 @@ async function submitCode(){
     let out = await runCode(tc.input);
 
     if(out.startsWith("ERROR")){
-      fail++;
-      failList += `\n${fail}. ERROR:\n${out}\n`;
+      failed++;
+      failedList += `\n${failed}. ERROR:\n${out}\n`;
     }
     else if(out === tc.output){
-      pass++;
-    }else{
-      fail++;
-      failList += `\n${fail}. Input:${tc.input}
-Expected:${tc.output}
-Output:${out}\n`;
+      passed++;
+    }
+    else{
+      failed++;
+      failedList += `\n${failed}. Input: ${tc.input}
+Expected: ${tc.output}
+Your Output: ${out}\n`;
     }
   }
 
-  let marks = pass*20;
+  let marks = passed * 20;
 
-  output.innerText =
-`${pass} testcases passed
-${fail} testcases failed
+  document.getElementById("output").innerText =
+`${passed} testcases passed
+${failed} testcases failed
 
-${failList}
+Failed Testcases:
+${failedList}
 
-Marks: ${marks}`;
+Total Marks: ${marks}`;
+
+  alert("Submitted!");
 }
 
+// ================= ADMIN =================
 function admin(){
-  let p = prompt("Password");
-  if(p==="CybSec") download();
-}
-
-function download(){
-  alert("Results download logic here");
+  let p = prompt("Enter Admin Password");
+  if(p==="CybSec"){
+    alert("Admin Panel (Add download logic)");
+  }
 }
 
 </script>
