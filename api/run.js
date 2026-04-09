@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   else language_id = 71;
 
   try {
-    const response = await fetch("https://judge0-ce.p.sulu.sh/submissions?base64_encoded=false&wait=true", {
+    const response = await fetch("https://ce.judge0.com/submissions?base64_encoded=false&wait=true", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
