@@ -1,245 +1,147 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Coding Exam Platform</title>
+<title>Coding Platform</title>
 
 <style>
-body { font-family: Arial; margin: 0; background: #0f172a; color: white; }
-header { background: #020617; padding: 10px; text-align: center; }
-.container { display: flex; height: 90vh; }
-.left { width: 40%; background: #111827; padding: 10px; }
-.right { width: 60%; background: #020617; padding: 10px; }
-textarea { width: 100%; height: 60%; background: black; color: #00ffcc; }
-button { padding: 10px; margin: 5px; }
-#timer { color: red; font-size: 18px; }
-
-#loginPage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-}
-
-input {
-  padding: 10px;
-  margin: 5px;
-  width: 250px;
-}
+body { background:#0f172a; color:white; font-family:Arial; }
+.container { display:flex; }
+.left { width:40%; padding:10px; }
+.right { width:60%; padding:10px; }
+textarea { width:100%; height:300px; background:black; color:#00ffcc; }
+button { padding:10px; margin:5px; }
 </style>
+
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="loginPage">
-  <h2>Login</h2>
-  <input type="text" id="name" placeholder="Name">
-  <input type="text" id="roll" placeholder="Roll Number">
-  <input type="email" id="email" placeholder="Email">
-  <button onclick="startExam()">Start Exam</button>
+<div id="login">
+<h2>Login</h2>
+<input id="name" placeholder="Name"><br>
+<input id="roll" placeholder="Roll"><br>
+<input id="email" placeholder="Email"><br>
+<button onclick="start()">Start</button>
 </div>
 
-<!-- EXAM -->
-<div id="examPage" style="display:none;">
-<header>
-<h2>Online Coding Test</h2>
-<div id="timer">Time Left: 20:00</div>
-</header>
+<div id="exam" style="display:none;">
+<h2 id="problem"></h2>
 
-<div class="container">
-<div class="left">
-<h3>Problem</h3>
-<div id="problem"></div>
-</div>
+<select id="language">
+<option value="python">Python</option>
+<option value="c">C</option>
+<option value="cpp">C++</option>
+</select>
 
-<div class="right">
-<textarea id="code"># Write your Python code here</textarea><br>
+<textarea id="code"></textarea><br>
+
 <button onclick="submitCode()">Submit</button>
 
-<h4>Output</h4>
 <pre id="output"></pre>
 
-<br><br>
-<button ondblclick="downloadAdmin()">Admin Panel</button>
-</div>
-</div>
+<button ondblclick="admin()">Admin</button>
 </div>
 
 <script>
 
-// ================= PROBLEMS =================
 const problems = [
 {
-  title:"Fibonacci Numbers",
-  desc:"Print first n fibonacci series",
+  title:"Factorial",
+  desc:"Find factorial",
   testcases:[
-    {input:"5", output:"0,1,1,2,3"},
-    {input:"1", output:"0"},
-    {input:"0", output:"invalid"},
-    {input:"3", output:"0,1,1"},
-    {input:"2", output:"0,1"}
+    {input:"5", output:"120"},
+    {input:"4", output:"24"},
+    {input:"3", output:"6"},
+    {input:"2", output:"2"},
+    {input:"1", output:"1"}
   ]
 }
 ];
 
-let selectedProblem;
+let selected;
 let currentRoll;
 
-// ================= START =================
-function startExam() {
+function start(){
 
-  let name = document.getElementById("name").value;
-  let roll = document.getElementById("roll").value;
-  let email = document.getElementById("email").value;
+  let name = nameInput.value;
+  let roll = rollInput.value;
+  let email = emailInput.value;
 
-  if(name === "organizer" && roll === "0000"){
-    let pass = prompt("Enter Admin Password:");
-    if(pass === "CybSec"){
-      downloadResults();
-      return;
-    } else {
-      alert("Wrong Password");
-      return;
-    }
-  }
-
-  if(!name || !roll || !email){
-    alert("Fill all details");
-    return;
+  if(name==="organizer" && roll==="0000"){
+    let p = prompt("Password");
+    if(p==="CybSec"){ download(); return; }
   }
 
   currentRoll = roll;
+  selected = problems[0];
 
-  if(localStorage.getItem("blocked_"+roll)){
-    alert("You are disqualified!");
-    return;
-  }
+  document.getElementById("login").style.display="none";
+  document.getElementById("exam").style.display="block";
 
-  selectedProblem = problems[0];
-
-  let examData = JSON.parse(localStorage.getItem("examData")) || [];
-
-  examData.push({
-    name, roll, email,
-    login: new Date().toLocaleString(),
-    submit: "",
-    marks: 0
-  });
-
-  localStorage.setItem("examData", JSON.stringify(examData));
-
-  document.getElementById("loginPage").style.display="none";
-  document.getElementById("examPage").style.display="block";
-
-  document.getElementById("problem").innerHTML =
-    `<h4>${selectedProblem.title}</h4><pre>${selectedProblem.desc}</pre>`;
-
-  document.documentElement.requestFullscreen();
+  document.getElementById("problem").innerText =
+    selected.title + "\n" + selected.desc;
 }
 
-// ================= TIMER =================
-let time = 1200;
-setInterval(()=>{
-  let min = Math.floor(time/60);
-  let sec = time%60;
-  document.getElementById("timer").innerText = `Time Left: ${min}:${sec}`;
-  time--;
-},1000);
-
-// ================= RUN CODE =================
 async function runCode(input){
 
-  const code = document.getElementById("code").value;
+  let code = document.getElementById("code").value;
+  let language = document.getElementById("language").value;
 
-  try{
-    const res = await fetch("/api/run", {
-      method:"POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({code,input})
-    });
+  let res = await fetch("/api/run",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({code,input,language})
+  });
 
-    const data = await res.json();
-    return (data.output || "").trim();
+  let data = await res.json();
 
-  }catch{
-    return "Error";
-  }
+  if(data.error) return "ERROR: " + data.error;
+
+  return (data.output||"").trim();
 }
 
-// ================= SUBMIT =================
 async function submitCode(){
 
-  let passed = 0;
-  let failed = 0;
-  let failedList = "";
+  let pass=0, fail=0, failList="";
 
-  for(let i=0;i<selectedProblem.testcases.length;i++){
+  for(let i=0;i<selected.testcases.length;i++){
 
-    let tc = selectedProblem.testcases[i];
-    let output = await runCode(tc.input);
+    let tc = selected.testcases[i];
+    let out = await runCode(tc.input);
 
-    if(output === tc.output){
-      passed++;
+    if(out.startsWith("ERROR")){
+      fail++;
+      failList += `\n${fail}. ERROR:\n${out}\n`;
+    }
+    else if(out === tc.output){
+      pass++;
     }else{
-      failed++;
-      failedList += `\n${failed}. Input: ${tc.input}\nExpected: ${tc.output}\nYour Output: ${output}\n`;
+      fail++;
+      failList += `\n${fail}. Input:${tc.input}
+Expected:${tc.output}
+Output:${out}\n`;
     }
   }
 
-  let marks = passed * 20;
+  let marks = pass*20;
 
-  let resultText = `
-${passed} testcases passed
-${failed} testcases failed
+  output.innerText =
+`${pass} testcases passed
+${fail} testcases failed
 
-Failed Testcases:
-${failedList}
+${failList}
 
-Total Marks: ${marks}
-`;
-
-  document.getElementById("output").innerText = resultText;
-
-  let examData = JSON.parse(localStorage.getItem("examData"));
-
-  examData.forEach(user=>{
-    if(user.roll === currentRoll){
-      user.submit = new Date().toLocaleString();
-      user.marks = marks;
-    }
-  });
-
-  localStorage.setItem("examData", JSON.stringify(examData));
-
-  alert("Submitted!");
+Marks: ${marks}`;
 }
 
-// ================= ADMIN =================
-function downloadAdmin(){
-  let pass = prompt("Enter Admin Password:");
-  if(pass === "CybSec"){
-    downloadResults();
-  }
+function admin(){
+  let p = prompt("Password");
+  if(p==="CybSec") download();
 }
 
-function downloadResults(){
-
-  let data = JSON.parse(localStorage.getItem("examData")) || [];
-
-  let csv = "Name,Roll,Email,Login,Submit,Marks\n";
-
-  data.forEach(u=>{
-    csv += `${u.name},${u.roll},${u.email},${u.login},${u.submit},${u.marks}\n`;
-  });
-
-  let blob = new Blob([csv]);
-  let a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "results.csv";
-  a.click();
+function download(){
+  alert("Results download logic here");
 }
 
 </script>
