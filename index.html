@@ -209,21 +209,32 @@ function startExam() {
     `<h4>${selectedProblem.title}</h4><pre>${selectedProblem.desc}</pre>`;
 
   document.documentElement.requestFullscreen();
-}
+  let time = 1200;
 
-// ================= TIMER =================
-let time = 1200;
 setInterval(()=>{
+
+  let timerElement =
+    document.getElementById("timer");
+
+  if(!timerElement) return;
+
   let min = Math.floor(time/60);
   let sec = time%60;
-  document.getElementById("timer").innerText = `Time Left: ${min}:${sec}`;
+
+  timerElement.innerText =
+    `Time Left: ${min}:${sec}`;
+
   time--;
 
   if(time < 0){
     submitCode();
     alert("Time Up!");
   }
+
 },1000);
+}
+
+
 
 // ================= RUN CODE =================
 async function runCode(input){
@@ -297,19 +308,19 @@ async function submitCode(){
 }
 
 // ================= ANTI-CHEAT =================
-function disqualify(){
-  localStorage.setItem("blocked_"+currentRoll, true);
-  alert("Violation! Exam ended.");
-  document.body.innerHTML = "<h1 style='text-align:center;margin-top:20%'>Exam Terminated</h1>";
-}
+//function disqualify(){
+//  localStorage.setItem("blocked_"+currentRoll, true);
+//  alert("Violation! Exam ended.");
+  //document.body.innerHTML = "<h1 style='text-align:center;margin-top:20%'>Exam Terminated</h1>";
+//}
 
-document.addEventListener("visibilitychange", ()=>{
-  if(document.hidden) disqualify();
-});
+//document.addEventListener("visibilitychange", ()=>{
+//  if(document.hidden) disqualify();
+//});
 
-document.addEventListener("fullscreenchange", ()=>{
-  if(!document.fullscreenElement) disqualify();
-});
+//document.addEventListener("fullscreenchange", ()=>{
+  //if(!document.fullscreenElement) disqualify();
+//});
 
 // ================= ADMIN DOWNLOAD =================
 function downloadAdmin(){
