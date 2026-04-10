@@ -357,6 +357,86 @@ document.addEventListener("fullscreenchange", ()=>{
   }
 
 });
+// ================= DISQUALIFY =================
+async function disqualify(){
+
+  alert("You are disqualified for switching tabs or exiting fullscreen!");
+
+  // mark blocked
+  localStorage.setItem("blocked_"+currentRoll, true);
+
+  let examData =
+    JSON.parse(localStorage.getItem("examData")) || [];
+
+  for(let i=0;i<examData.length;i++){
+
+    if(examData[i].roll === currentRoll){
+
+      examData[i].blocked = true;
+      examData[i].marks = 0;
+      examData[i].submit =
+        new Date().toLocaleString();
+
+      break;
+
+    }
+
+  }
+
+  localStorage.setItem(
+    "examData",
+    JSON.stringify(examData)
+  );
+
+  // save to server
+  try{
+
+    await fetch("/api/saveResult", {
+
+      method:"POST",
+
+      headers:{
+        "Content-Type":"application/json"
+      },
+
+      body: JSON.stringify({
+
+        name: document.getElementById("name").value,
+        roll: currentRoll,
+        email: document.getElementById("email").value,
+        submit: new Date().toLocaleString(),
+        marks: 0,
+        status: "DISQUALIFIED"
+
+      })
+
+    });
+
+  }
+  catch(err){
+    console.log("Save failed");
+  }
+
+  // exit fullscreen
+  if(document.fullscreenElement){
+    document.exitFullscreen();
+  }
+
+  // terminate exam screen
+  document.body.innerHTML = `
+    <h1 style="
+      color:red;
+      text-align:center;
+      margin-top:100px;
+      font-size:40px;
+    ">
+      DISQUALIFIED ❌
+      <br><br>
+      Tab Switching Detected
+    </h1>
+  `;
+
+}
 
 // ================= ADMIN DOWNLOAD =================
 function downloadAdmin(){
