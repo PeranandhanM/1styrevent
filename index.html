@@ -290,11 +290,11 @@ async function submitCode(){
     if(output.trim() === tc.output.trim()){
       marks += 20;
       resultText += `Result: PASS ✅\n\n`;
-    } else {
+    } 
+    else{
       resultText += `Result: FAIL ❌\n\n`;
     }
 
-    // Show progress immediately
     document.getElementById("output").innerText = resultText;
 
   }
@@ -303,10 +303,40 @@ async function submitCode(){
 
   document.getElementById("output").innerText = resultText;
 
-  alert("Submitted!");
+  // ✅ SAVE MARKS TO SERVER
+  try{
+
+    await fetch("/api/saveResult", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+
+        name: document.getElementById("name").value,
+        roll: currentRoll,
+        email: document.getElementById("email").value,
+        login: new Date().toLocaleString(),
+        submit: new Date().toLocaleString(),
+        marks: marks
+
+      })
+
+    });
+
+  }
+  catch(error){
+
+    console.error("Save failed:", error);
+
+  }
+
+  alert("Submitted Successfully!");
 
 }
-
 // ================= ANTI-CHEAT =================
 document.addEventListener("visibilitychange", ()=>{
 
