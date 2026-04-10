@@ -86,12 +86,12 @@ const problems = [
     {input:"5", output:"0,1,1,2,3"},
     {input:"0", output:"invalid"},
     {input:"10", output:"0,1,1,2,3,5,8,13,21,34"},
-    {input:"005", output:"0,1,1,2,3"}
+    {input:"-5", output:"invalid"}
   ]
 },
 {
-  title:"Count occurance of character",
-  desc:"Find how many times a character appears in a string",
+  title:"Count occurance of alphabets",
+  desc:"Find how many times a alphabets appears in a string",
   testcases:[
     {input:"python", output:"p-1,y-1,t-1,h-1,o-1,n-1"},
     {input:"heLlo", output:"h-1,e-1,l-2,o-1"},
@@ -128,7 +128,7 @@ const problems = [
   "testcases":[
     {"input":"Hello@123", "output":"Uppercase-1,Lowercase-4,Digits-3,Symbols-1,Spaces-0"},
     {"input":"ABC def 456!", "output":"Uppercase-3,Lowercase-3,Digits-3,Symbols-1,Spaces-2"},
-    {"input":"", "output":"Uppercase-0,Lowercase-0,Digits-0,Symbols-0,Spaces-0"},
+    {"input":" ", "output":"Uppercase-0,Lowercase-0,Digits-0,Symbols-0,Spaces-1"},
     {"input":"12345", "output":"Uppercase-0,Lowercase-0,Digits-5,Symbols-0,Spaces-0"},
     {"input":"!@#$%", "output":"Uppercase-0,Lowercase-0,Digits-0,Symbols-5,Spaces-0"}
   ]
